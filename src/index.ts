@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import authMiddleware from "./middleware/auth";
+import { auth } from "./lib/auth";
 
 // Routes
 import searchRoutes from "./routes/search";
@@ -37,6 +38,20 @@ const app = new Elysia()
     })
   )
   .use(authMiddleware)
+  // Helper endpoint for browser-based Google OAuth
+  .get("/login/google", async ({ redirect, query }) => {
+    const callbackURL = query.callbackURL || "http://localhost:3000";
+    const response = await auth.api.signInSocial({
+      body: {
+        provider: "google",
+        callbackURL,
+      },
+    });
+    if (response.url) {
+      return redirect(response.url);
+    }
+    return { error: "Failed to initiate Google OAuth" };
+  })
   .group("/api", (app) =>
     app
       .use(searchRoutes)
@@ -54,3 +69,4 @@ const app = new Elysia()
 
 console.log(`🦊 Server running at http://${app.server?.hostname}:${app.server?.port}`);
 console.log(`📚 Swagger docs at http://${app.server?.hostname}:${app.server?.port}/swagger`);
+
