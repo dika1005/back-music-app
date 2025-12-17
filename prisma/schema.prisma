@@ -13,21 +13,59 @@ datasource db {
   provider = "mysql"
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  avatar    String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+model user {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  sessions    session[]      // ✅ lowercase
+  accounts    account[]      // ✅ lowercase
   favorites   Favorite[]
   playlists   Playlist[]
   history     History[]
   offlineSync OfflineSync[]
+}
 
-  @@map("users")
+model session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?  @db.Text
+  userId    String
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+model account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+model verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Favorite {
@@ -37,7 +75,7 @@ model Favorite {
   songData  Json
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, songId])
   @@index([userId])
@@ -54,7 +92,7 @@ model Playlist {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  user           @relation(fields: [userId], references: [id], onDelete: Cascade)
   songs PlaylistSong[]
 
   @@index([userId])
@@ -83,7 +121,7 @@ model History {
   songData Json
   playedAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, playedAt])
   @@map("history")
@@ -96,7 +134,7 @@ model OfflineSync {
   songData Json
   syncedAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, songId])
   @@index([userId])
