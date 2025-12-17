@@ -38,22 +38,27 @@ const app = new Elysia()
     })
   )
   .use(authMiddleware)
-  // Helper endpoint for browser-based Google OAuth
-  .get("/login/google", async ({ redirect, query }) => {
-    const callbackURL = query.callbackURL || "http://localhost:3000";
-    const response = await auth.api.signInSocial({
-      body: {
-        provider: "google",
-        callbackURL,
-      },
-    });
-    if (response.url) {
-      return redirect(response.url);
-    }
-    return { error: "Failed to initiate Google OAuth" };
-  })
   .group("/api", (app) =>
     app
+      // Helper endpoint for browser-based Google OAuth
+      .get("/login/google", async ({ redirect, query }) => {
+        const callbackURL = query.callbackURL || "http://localhost:3000";
+        const response = await auth.api.signInSocial({
+          body: {
+            provider: "google",
+            callbackURL,
+          },
+        });
+        if (response.url) {
+          return redirect(response.url);
+        }
+        return { error: "Failed to initiate Google OAuth" };
+      })
+      // Health check
+      .get("/health", () => ({ status: "ok" }), {
+        detail: { tags: ["Health"], summary: "Health check endpoint" },
+      })
+      // Feature routes
       .use(searchRoutes)
       .use(songsRoutes)
       .use(albumsRoutes)
@@ -62,11 +67,7 @@ const app = new Elysia()
       .use(favoritesRoutes)
       .use(historyRoutes)
   )
-  .get("/health", () => ({ status: "ok" }), {
-    detail: { tags: ["Health"], summary: "Health check endpoint" },
-  })
   .listen(process.env.PORT || 3000);
 
 console.log(`🦊 Server running at http://${app.server?.hostname}:${app.server?.port}`);
 console.log(`📚 Swagger docs at http://${app.server?.hostname}:${app.server?.port}/swagger`);
-
