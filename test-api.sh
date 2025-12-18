@@ -1,76 +1,59 @@
-#!/bin/bash
+﻿#!/bin/bash
 # ============================================
-# Music API - Test All Endpoints
-# Run: chmod +x test-api.sh && ./test-api.sh
+# Music API - Focused tests for popular artists/songs/albums
+# Run: bash ./test-api.sh
 # ============================================
 
-BASE_URL="http://localhost:3000"
+BASE_URL="http://127.0.0.1:3000"
 
 echo "================================================"
-echo "🎵 Music API - Testing All Endpoints"
+echo "Music API - Focused Tests (Artists, Songs, Albums)"
 echo "================================================"
 echo ""
 
-# 1. Health Check
-echo "=== 1. Health Check ==="
-http GET $BASE_URL/api/health
-echo ""
+# Detect WSL: if running inside WSL, prefer Windows curl to reach Windows localhost
+if [ -f /proc/version ] && grep -qi microsoft /proc/version 2>/dev/null; then
+	if [ -x /mnt/c/Windows/System32/curl.exe ]; then
+		CURL_CMD="/mnt/c/Windows/System32/curl.exe"
+	else
+		CURL_CMD="curl"
+	fi
+else
+	CURL_CMD="curl"
+fi
 
-# 2. Search All
-echo "=== 2. Search All (q=arijit) ==="
-http GET "$BASE_URL/api/search?q=arijit" | head -100
-echo ""
+# helper (uses chosen curl binary)
+fetch() { "$CURL_CMD" -sS "$1"; }
 
-# 3. Search Songs
-echo "=== 3. Search Songs (q=tum hi ho) ==="
-http GET "$BASE_URL/api/search/songs?q=tum+hi+ho" | head -100
-echo ""
+# helper to limit output to first 100 lines
+head100() { sed -n '1,100p'; }
 
-# 4. Search Albums
-echo "=== 4. Search Albums (q=aashiqui) ==="
-http GET "$BASE_URL/api/search/albums?q=aashiqui" | head -100
-echo ""
+ARTISTS=("adele" "billie+eilish")
+SONGS=("hello+adele" "bad+guy+billie+eilish")
+ALBUMS=("25+adele" "when+we+all+fall+asleep+billie+eilish")
 
-# 5. Search Artists
-echo "=== 5. Search Artists (q=arijit) ==="
-http GET "$BASE_URL/api/search/artists?q=arijit" | head -100
-echo ""
+echo "--- Artists ---"
+for a in "${ARTISTS[@]}"; do
+	echo "Searching artist: ${a//+/ }"
+	fetch "$BASE_URL/api/search/artists?q=$a" | head100
+	echo ""
+done
 
-# 6. Get Song Details
-echo "=== 6. Get Song Details (id=aRZbUYD7 - Tum Hi Ho) ==="
-http GET $BASE_URL/api/songs/aRZbUYD7 | head -100
-echo ""
+echo "--- Songs ---"
+for s in "${SONGS[@]}"; do
+	echo "Searching song: ${s//+/ }"
+	fetch "$BASE_URL/api/search/songs?q=$s" | head100
+	echo ""
+done
 
-# 7. Get Song Lyrics
-echo "=== 7. Get Song Lyrics ==="
-http GET $BASE_URL/api/songs/aRZbUYD7/lyrics
-echo ""
-
-# 8. Get Song Suggestions
-echo "=== 8. Get Song Suggestions ==="
-http GET $BASE_URL/api/songs/aRZbUYD7/suggestions | head -100
-echo ""
-
-# 9. Get Album Details
-echo "=== 9. Get Album Details (id=1139549 - Aashiqui 2) ==="
-http GET $BASE_URL/api/albums/1139549 | head -100
-echo ""
-
-# 10. Get Artist Details
-echo "=== 10. Get Artist Details (id=459320 - Arijit Singh) ==="
-http GET $BASE_URL/api/artists/459320 | head -100
-echo ""
-
-# 11. Get Artist Songs
-echo "=== 11. Get Artist Songs ==="
-http GET $BASE_URL/api/artists/459320/songs | head -100
-echo ""
-
-# 12. Get Artist Albums
-echo "=== 12. Get Artist Albums ==="
-http GET $BASE_URL/api/artists/459320/albums | head -100
-echo ""
+echo "--- Albums ---"
+for al in "${ALBUMS[@]}"; do
+	echo "Searching album: ${al//+/ }"
+	fetch "$BASE_URL/api/search/albums?q=$al" | head100
+	echo ""
+done
 
 echo "================================================"
-echo "✅ All endpoints tested!"
+echo "Focused tests finished"
 echo "================================================"
+
