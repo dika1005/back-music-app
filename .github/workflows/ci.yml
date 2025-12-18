@@ -2,9 +2,9 @@ name: CI - Code Quality
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 env:
   JIOSAAVN_API_URL: ${{ secrets.JIOSAAVN_API_URL || 'https://saavn.dev/api' }}
