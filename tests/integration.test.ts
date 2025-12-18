@@ -12,9 +12,7 @@ beforeAll(async () => {
     serverAvailable = response.ok;
   } catch {
     serverAvailable = false;
-    console.log(
-      "⚠️ Server not running - skipping integration tests (this is expected in CI)"
-    );
+    console.log("⚠️ Server not running - skipping integration tests (this is expected in CI)");
   }
 });
 
