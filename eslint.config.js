@@ -22,6 +22,7 @@ export default [
         Response: "readonly",
         URL: "readonly",
         Bun: "readonly",
+        AbortSignal: "readonly",
       },
     },
     plugins: {

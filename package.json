@@ -1,16 +1,17 @@
 {
   "name": "app-music",
   "version": "1.0.50",
+  "type": "module",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir=dist --target=bun",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --ignore-path .gitignore \"!src/generated/**\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" --ignore-path .gitignore \"!src/generated/**\"",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --ignore-pattern \"src/generated/**\"",
+    "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix --ignore-pattern \"src/generated/**\"",
     "db:push": "bunx prisma db push",
     "db:generate": "bunx prisma generate"
   },
