@@ -1,4 +1,5 @@
 {
+  "buildCommand": "bunx prisma generate",
   "rewrites": [
     {
       "source": "/(.*)",
