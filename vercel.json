@@ -1,7 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "bun run build:vercel",
-  "framework": null,
   "installCommand": "bun install",
-  "outputDirectory": ".vercel/output"
+  "buildCommand": "bunx prisma generate",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ]
 }
