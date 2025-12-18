@@ -1,0 +1,49 @@
+name: CI - Code Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  JIOSAAVN_API_URL: ${{ secrets.JIOSAAVN_API_URL || 'https://saavn.dev/api' }}
+
+jobs:
+  quality:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Check formatting (Prettier)
+        run: bun run format:check
+
+      - name: Run linter (ESLint)
+        run: bun run lint
+
+      - name: Generate Prisma Client
+        run: bunx prisma generate
+
+      - name: Run tests
+        run: bun run test
+        env:
+          JIOSAAVN_API_URL: ${{ env.JIOSAAVN_API_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+      - name: Type check
+        run: bunx tsc --noEmit --skipLibCheck

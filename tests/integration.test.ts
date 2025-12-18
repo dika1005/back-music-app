@@ -4,7 +4,7 @@ describe("Health Check", () => {
   const baseUrl = "http://localhost:3000";
 
   it("should return ok status", async () => {
-    const response = await fetch(`${baseUrl}/health`);
+    const response = await fetch(`${baseUrl}/api/health`);
     const data = await response.json();
     expect(data.status).toBe("ok");
   });
