@@ -52,7 +52,7 @@ describe("API Endpoints Availability", () => {
       console.log("Skipped: server not available");
       return;
     }
-    const response = await fetch(`${baseUrl}/api/albums/1139549`);
+    const response = await fetch(`${baseUrl}/api/albums?id=1139549`);
     expect(response.status).toBe(200);
   });
 

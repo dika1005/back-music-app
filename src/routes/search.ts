@@ -15,7 +15,7 @@ export const searchRoutes = new Elysia({ prefix: "/search", tags: ["Search"] })
   .get(
     "/songs",
     async ({ query }) => {
-      const { q, page = "1", limit = "20" } = query;
+      const { q, page = "0", limit = "10" } = query;
       if (!q) return { success: false, error: "Query required" };
       const data = await jiosaavn.searchSongs(q, parseInt(page), parseInt(limit));
       return { success: true, data };
@@ -25,7 +25,7 @@ export const searchRoutes = new Elysia({ prefix: "/search", tags: ["Search"] })
   .get(
     "/albums",
     async ({ query }) => {
-      const { q, page = "1", limit = "20" } = query;
+      const { q, page = "0", limit = "10" } = query;
       if (!q) return { success: false, error: "Query required" };
       const data = await jiosaavn.searchAlbums(q, parseInt(page), parseInt(limit));
       return { success: true, data };
@@ -35,7 +35,7 @@ export const searchRoutes = new Elysia({ prefix: "/search", tags: ["Search"] })
   .get(
     "/artists",
     async ({ query }) => {
-      const { q, page = "1", limit = "20" } = query;
+      const { q, page = "0", limit = "10" } = query;
       if (!q) return { success: false, error: "Query required" };
       const data = await jiosaavn.searchArtists(q, parseInt(page), parseInt(limit));
       return { success: true, data };
@@ -45,7 +45,7 @@ export const searchRoutes = new Elysia({ prefix: "/search", tags: ["Search"] })
   .get(
     "/playlists",
     async ({ query }) => {
-      const { q, page = "1", limit = "20" } = query;
+      const { q, page = "0", limit = "10" } = query;
       if (!q) return { success: false, error: "Query required" };
       const data = await jiosaavn.searchPlaylists(q, parseInt(page), parseInt(limit));
       return { success: true, data };

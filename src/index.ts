@@ -12,6 +12,7 @@ import artistsRoutes from "./routes/artists";
 import playlistsRoutes from "./routes/playlists";
 import favoritesRoutes from "./routes/favorites";
 import historyRoutes from "./routes/history";
+import feedRoutes from "./routes/feed";
 
 const app = new Elysia()
   .use(cors())
@@ -26,8 +27,9 @@ const app = new Elysia()
         },
         tags: [
           { name: "Auth", description: "Authentication endpoints (Login/Register)" },
+          { name: "Feed", description: "Homepage feed and curated content" },
           { name: "Search", description: "Search songs, albums, artists, and playlists" },
-          { name: "Songs", description: "Song details, lyrics, and suggestions" },
+          { name: "Songs", description: "Song details and suggestions" },
           { name: "Albums", description: "Album details and tracks" },
           { name: "Artists", description: "Artist details, songs, and albums" },
           { name: "Playlists", description: "User playlists CRUD operations" },
@@ -46,6 +48,7 @@ const app = new Elysia()
       })
       // Feature routes
       .use(authRoutes)
+      .use(feedRoutes)
       .use(searchRoutes)
       .use(songsRoutes)
       .use(albumsRoutes)

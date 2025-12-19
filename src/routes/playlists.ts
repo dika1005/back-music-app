@@ -5,17 +5,24 @@ import authMiddleware from "../middleware/auth";
 
 export const playlistsRoutes = new Elysia({ prefix: "/playlists", tags: ["Playlists"] })
   .use(authMiddleware)
-  // Get JioSaavn playlist
+  // Get JioSaavn playlist by ID or link
   .get(
-    "/jio/:id",
-    async ({ params, query }) => {
-      const page = parseInt(query.page || "1");
-      const limit = parseInt(query.limit || "50");
-      const data = await jiosaavn.getPlaylist(params.id, page, limit);
+    "/jio",
+    async ({ query }) => {
+      const { id, link, page = "0", limit = "10" } = query;
+      if (!id && !link) return { success: false, error: "Either 'id' or 'link' is required" };
+      
+      let data;
+      if (id) {
+        data = await jiosaavn.getPlaylist(id, parseInt(page), parseInt(limit));
+      } else if (link) {
+        data = await jiosaavn.getPlaylistByLink(link, parseInt(page), parseInt(limit));
+      }
+      
       if (!data) return { success: false, error: "Playlist not found" };
       return { success: true, data };
     },
-    { detail: { summary: "Get JioSaavn playlist" } }
+    { detail: { summary: "Get JioSaavn playlist by ID or link" } }
   )
   // User playlists (protected)
   .get(
