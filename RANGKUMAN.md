@@ -16,7 +16,7 @@ Backend API untuk aplikasi musik Android yang mengintegrasikan JioSaavn API untu
 
 | Component | Technology |
 |-----------|------------|
-| Runtime | Bun v1.3+ |
+| Runtime | Bun v1.3+ | 
 | Framework | Elysia.js |
 | Database | MariaDB/MySQL |
 | ORM | Prisma |
