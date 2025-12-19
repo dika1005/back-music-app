@@ -1,41 +1,122 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { bearer } from "better-auth/plugins";
 import prisma from "./prisma";
-import { OAuth2Client } from "google-auth-library";
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_ANDROID_CLIENT_ID);
+// Hash password using Bun's built-in hasher
+export async function hashPassword(password: string): Promise<string> {
+  return await Bun.password.hash(password, {
+    algorithm: "bcrypt",
+    cost: 10,
+  });
+}
 
-export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-  database: prismaAdapter(prisma, {
-    provider: "mysql",
-  }),
-  emailAndPassword: {
-    enabled: true,
-  },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    },
-  },
-  plugins: [bearer()],
-});
+// Verify password
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return await Bun.password.verify(password, hash);
+}
 
-export async function verifyGoogleToken(idToken: string) {
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_ANDROID_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    if (!payload) {
-      throw new Error("Invalid token");
-    }
-    return payload; // Contains user info like sub, email, name, etc.
-  } catch (error) {
-    console.error("Google token verification failed:", error);
-    throw new Error("Token verification failed");
+// Generate random token
+export function generateToken(): string {
+  return crypto.randomUUID() + crypto.randomUUID().replace(/-/g, "");
+}
+
+// Register new user
+export async function register(data: { email: string; password: string; name: string }) {
+  const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+  if (existingUser) {
+    throw new Error("Email already registered");
   }
+
+  const hashedPassword = await hashPassword(data.password);
+  const user = await prisma.user.create({
+    data: {
+      email: data.email,
+      password: hashedPassword,
+      name: data.name,
+    },
+  });
+
+  // Create session
+  const token = generateToken();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      token,
+      expiresAt,
+    },
+  });
+
+  return {
+    user: { id: user.id, email: user.email, name: user.name, image: user.image },
+    token,
+  };
+}
+
+// Login user
+export async function login(email: string, password: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new Error("Invalid email or password");
+  }
+
+  const isValid = await verifyPassword(password, user.password);
+  if (!isValid) {
+    throw new Error("Invalid email or password");
+  }
+
+  // Create session
+  const token = generateToken();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      token,
+      expiresAt,
+    },
+  });
+
+  return {
+    user: { id: user.id, email: user.email, name: user.name, image: user.image },
+    token,
+  };
+}
+
+// Get session by token
+export async function getSession(token: string) {
+  if (!token) return null;
+
+  const session = await prisma.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+
+  if (!session) return null;
+  if (session.expiresAt < new Date()) {
+    await prisma.session.delete({ where: { id: session.id } });
+    return null;
+  }
+
+  return {
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+      image: session.user.image,
+    },
+    session: { id: session.id, expiresAt: session.expiresAt },
+  };
+}
+
+// Logout - delete session
+export async function logout(token: string) {
+  await prisma.session.deleteMany({ where: { token } });
+}
+
+// Extract token from Authorization header
+export function extractToken(headers: Headers): string | null {
+  const authHeader = headers.get("Authorization");
+  if (!authHeader) return null;
+  if (authHeader.startsWith("Bearer ")) {
+    return authHeader.slice(7);
+  }
+  return authHeader;
 }

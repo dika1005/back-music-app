@@ -1,11 +1,15 @@
 import { Elysia } from "elysia";
-import { auth } from "../lib/auth";
+import { getSession, extractToken } from "../lib/auth";
 
-export const authMiddleware = new Elysia({ name: "auth" }).mount(auth.handler).macro({
+export const authMiddleware = new Elysia({ name: "auth" }).macro({
   isAuth: {
     async resolve({ status, request: { headers } }) {
-      const session = await auth.api.getSession({ headers });
+      const token = extractToken(headers);
+      if (!token) return status(401);
+
+      const session = await getSession(token);
       if (!session) return status(401);
+
       return {
         user: session.user,
         session: session.session,
