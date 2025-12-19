@@ -3,6 +3,7 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import authMiddleware from "./middleware/auth";
 import { auth } from "./lib/auth";
+import { verifyGoogleToken } from "./lib/auth";
 
 // Routes
 import searchRoutes from "./routes/search";
@@ -58,6 +59,30 @@ const app = new Elysia()
       .get("/health", () => ({ status: "ok" }), {
         detail: { tags: ["Health"], summary: "Health check endpoint" },
       })
+      // Google token verification for Android
+      .post(
+        "/auth/google/verify",
+        async ({ body }) => {
+          const { idToken } = body as { idToken: string };
+          if (!idToken) {
+            return { error: "idToken is required" };
+          }
+          try {
+            const payload = await verifyGoogleToken(idToken);
+            // Here you can create or update user in DB using payload.sub, payload.email, etc.
+            return {
+              success: true,
+              user: { sub: payload.sub, email: payload.email, name: payload.name },
+            };
+          } catch (error) {
+            console.error("Token verification error:", error);
+            return { error: "Invalid token" };
+          }
+        },
+        {
+          detail: { tags: ["Auth"], summary: "Verify Google OAuth token from Android app" },
+        }
+      )
       // Feature routes
       .use(searchRoutes)
       .use(songsRoutes)
